@@ -1,119 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8" />
-<title>Simple HackChat Clone</title>
+<meta charset="UTF-8">
+<title>Private HackChat Client</title>
 <style>
 body {
     background: #111;
     color: #0f0;
     font-family: monospace;
     margin: 0;
-    padding: 0;
-}
-#login {
     padding: 20px;
 }
-#chat {
-    display: none;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
+#chat { display:none; }
 #messages {
-    flex: 1;
+    height: 80vh;
     overflow-y: auto;
+    border: 1px solid #0f0;
     padding: 10px;
 }
 input, button {
     padding: 10px;
-    border: none;
-    outline: none;
+    background: #222;
+    border: 1px solid #0f0;
+    color: #0f0;
     font-family: monospace;
 }
-#msgInput {
-    width: 80%;
-    background: #222;
-    color: #0f0;
-}
-button {
-    background: #333;
-    color: #0f0;
-    cursor: pointer;
-}
+button { cursor: pointer; }
 </style>
 </head>
-
 <body>
 
 <div id="login">
-    <h2>Room name?</h2>
-    <input id="room" placeholder="example: 123"><br><br>
-    <h2>Nickname?</h2>
-    <input id="nick" placeholder="your name"><br><br>
-    <button onclick="enterRoom()">Enter Chat</button>
+    <h2>Room name:</h2>
+    <input id="room"><br><br>
+
+    <h2>Nickname:</h2>
+    <input id="nick"><br><br>
+
+    <button onclick="join()">Join</button>
 </div>
 
 <div id="chat">
-    <div id="messages"></div>
-    <div style="padding:10px;">
-        <input id="msgInput" placeholder="type message...">
-        <button onclick="sendMsg()">Send</button>
-    </div>
+    <div id="messages"></div><br>
+    <input id="msgInput" placeholder="type...">
+    <button onclick="sendMsg()">Send</button>
 </div>
 
 <script>
 let ws;
-let room = "";
-let nick = "";
+let room, nick;
 
-function enterRoom() {
+function join() {
     room = document.getElementById("room").value.trim();
     nick = document.getElementById("nick").value.trim();
 
-    if (!room || !nick) {
-        alert("Enter room & nickname!");
-        return;
-    }
+    if (!room || !nick) { alert("Enter both"); return; }
 
     document.getElementById("login").style.display = "none";
-    document.getElementById("chat").style.display = "flex";
+    document.getElementById("chat").style.display = "block";
 
-    // public websocket relay
-    ws = new WebSocket("wss://ws.postman-echo.com/raw");
+    ws = new WebSocket("wss://ws.hack.chat/chat-ws");
 
     ws.onopen = () => {
-        // announce join
         ws.send(JSON.stringify({
-            room: room,
-            nick: nick,
-            msg: nick + " joined."
+            cmd: "join",
+            channel: room,
+            nick: nick
         }));
     };
 
-    ws.onmessage = (ev) => {
-        const data = JSON.parse(ev.data);
+    ws.onmessage = (event) => {
+        let data = JSON.parse(event.data);
 
-        if (data.room !== room) return; // ignore other rooms
-
-        const div = document.createElement("div");
-        div.textContent = data.nick + ": " + data.msg;
-        document.getElementById("messages").appendChild(div);
-        div.scrollIntoView();
+        if (data.cmd === "chat") {
+            printMsg(data.nick + ": " + data.text);
+        }
+        if (data.cmd === "onlineSet") {
+            printMsg("[system] users online: " + data.nicks.join(", "));
+        }
+        if (data.cmd === "info") {
+            printMsg("[info] " + data.text);
+        }
     };
 }
 
 function sendMsg() {
-    const text = document.getElementById("msgInput").value.trim();
-    if (!text) return;
+    let t = document.getElementById("msgInput").value.trim();
+    if (!t) return;
 
     ws.send(JSON.stringify({
-        room: room,
-        nick: nick,
-        msg: text
+        cmd: "chat",
+        channel: room,
+        text: t
     }));
 
     document.getElementById("msgInput").value = "";
+}
+
+function printMsg(t) {
+    const d = document.createElement("div");
+    d.textContent = t;
+    document.getElementById("messages").appendChild(d);
+    d.scrollIntoView();
 }
 </script>
 

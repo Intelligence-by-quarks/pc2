@@ -64,8 +64,8 @@ function join() {
     ws.onopen = () => {
         ws.send(JSON.stringify({
             cmd: "join",
-            channel: room,
-            nick: nick
+            nick: nick,
+            channel: room
         }));
         printMsg("[system] connected as " + nick);
     };
@@ -91,14 +91,13 @@ function sendMsg() {
     let t = document.getElementById("msgInput").value.trim();
     if (!t) return;
 
-    // send to server
+    // send to hack.chat correctly
     ws.send(JSON.stringify({
         cmd: "chat",
-        channel: room,
         text: t
     }));
 
-    // show OWN message locally (hack.chat does not echo)
+    // show own message
     printMsg(nick + ": " + t);
 
     document.getElementById("msgInput").value = "";

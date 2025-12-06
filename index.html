@@ -42,7 +42,7 @@ button { cursor: pointer; }
 
 <div id="chat">
     <div id="messages"></div><br>
-    <input id="msgInput" placeholder="type...">
+    <input id="msgInput" placeholder="type..." onkeydown="if(event.key==='Enter') sendMsg()">
     <button onclick="sendMsg()">Send</button>
 </div>
 
@@ -67,6 +67,7 @@ function join() {
             channel: room,
             nick: nick
         }));
+        printMsg("[system] connected as " + nick);
     };
 
     ws.onmessage = (event) => {
@@ -75,9 +76,11 @@ function join() {
         if (data.cmd === "chat") {
             printMsg(data.nick + ": " + data.text);
         }
+
         if (data.cmd === "onlineSet") {
-            printMsg("[system] users online: " + data.nicks.join(", "));
+            printMsg("[system] online: " + data.nicks.join(", "));
         }
+
         if (data.cmd === "info") {
             printMsg("[info] " + data.text);
         }
@@ -88,11 +91,15 @@ function sendMsg() {
     let t = document.getElementById("msgInput").value.trim();
     if (!t) return;
 
+    // send to server
     ws.send(JSON.stringify({
         cmd: "chat",
         channel: room,
         text: t
     }));
+
+    // show OWN message locally (hack.chat does not echo)
+    printMsg(nick + ": " + t);
 
     document.getElementById("msgInput").value = "";
 }

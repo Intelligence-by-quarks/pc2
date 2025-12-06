@@ -14,7 +14,6 @@ body {
     justify-content: center;
     align-items: center;
 }
-
 #chatContainer {
     width: 520px;
     height: 720px;
@@ -26,7 +25,6 @@ body {
     overflow: hidden;
     box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
-
 #header {
     text-align: center;
     padding: 20px;
@@ -35,7 +33,6 @@ body {
     font-weight: bold;
     color: #fff;
 }
-
 #messages {
     flex: 1;
     overflow-y: auto;
@@ -44,7 +41,6 @@ body {
     flex-direction: column;
     gap: 12px;
 }
-
 .message {
     max-width: 75%;
     padding: 12px 18px;
@@ -53,13 +49,10 @@ body {
     word-wrap: break-word;
     animation: fadeIn 0.3s ease;
 }
-
 .own { background: linear-gradient(120deg, #4facfe, #00f2fe); align-self: flex-end; border-bottom-right-radius: 0; }
 .other { background: linear-gradient(120deg, #ff9a9e, #fecfef); align-self: flex-start; border-bottom-left-radius: 0; }
 .system { align-self: center; background: rgba(255,255,255,0.2); color: #fff; border-radius: 15px; }
-
 img, video { max-width: 250px; border-radius: 15px; }
-
 #inputBar {
     display: flex;
     padding: 12px;
@@ -67,7 +60,6 @@ img, video { max-width: 250px; border-radius: 15px; }
     gap: 10px;
     align-items: center;
 }
-
 #msgBox {
     flex: 1;
     border: none;
@@ -76,9 +68,7 @@ img, video { max-width: 250px; border-radius: 15px; }
     font-size: 16px;
     outline: none;
 }
-
 #msgBox::placeholder { color: rgba(255,255,255,0.7); }
-
 button {
     border: none;
     border-radius: 25px;
@@ -89,12 +79,9 @@ button {
     cursor: pointer;
     transition: transform 0.2s ease;
 }
-
 button:hover { transform: scale(1.05); }
-
 #joinContainer { display: flex; flex-direction: column; padding: 25px; gap: 12px; }
 #joinContainer input { padding: 12px; border-radius: 15px; border: none; outline: none; font-size: 16px; }
-
 #fileInputLabel, #emojiBtn {
     background: rgba(255,255,255,0.2);
     padding: 10px 12px;
@@ -106,7 +93,6 @@ button:hover { transform: scale(1.05); }
     justify-content: center;
     color: #fff;
 }
-
 #emojiPicker {
     position: absolute;
     bottom: 70px;
@@ -122,10 +108,8 @@ button:hover { transform: scale(1.05); }
     padding: 10px;
     z-index: 100;
 }
-
 .emoji { font-size: 22px; padding: 5px; cursor: pointer; transition: transform 0.1s ease; }
 .emoji:hover { transform: scale(1.2); }
-
 @keyframes fadeIn { from {opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
 </style>
 </head>
@@ -163,9 +147,7 @@ function populateEmojis() {
         const span = document.createElement("span");
         span.textContent = e;
         span.className = "emoji";
-        span.onclick = () => {
-            document.getElementById("msgBox").value += e;
-        }
+        span.onclick = () => { document.getElementById("msgBox").value += e; }
         picker.appendChild(span);
     });
 }
@@ -235,23 +217,22 @@ function addMessage(text, type) {
 
 function sendMsg() {
     const msgBox = document.getElementById("msgBox");
-    let msg = msgBox.value;
-
     const fileInput = document.getElementById("fileInput");
+    const msg = msgBox.value.trim();
+
+    // Only send one bubble per send
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
             ws.send(JSON.stringify({cmd: "chat", text: e.target.result}));
-            displayMessage(myNick, e.target.result);
         }
         reader.readAsDataURL(file);
         fileInput.value = "";
     }
 
-    if (msg.trim() !== "") {
+    if (msg !== "") {
         ws.send(JSON.stringify({cmd: "chat", text: msg}));
-        displayMessage(myNick, msg);
         msgBox.value = "";
     }
 }

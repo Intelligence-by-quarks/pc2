@@ -1,74 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Private Chat</title>
 <style>
     body {
         margin: 0;
-        background: #111;
-        font-family: Arial, sans-serif;
-        color: #fff;
+        font-family: 'Segoe UI', sans-serif;
+        background: linear-gradient(to right, #ff9a9e, #fad0c4);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
-    #container {
-        max-width: 700px;
-        margin: 0 auto;
-        padding: 20px;
+
+    #chatContainer {
+        width: 400px;
+        height: 600px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
-    #messages {
-        height: 60vh;
-        overflow-y: auto;
-        background: #222;
+
+    #header {
+        text-align: center;
         padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 15px;
+        background: rgba(255,255,255,0.2);
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #fff;
     }
-    #messages div {
-        margin-bottom: 10px;
-        padding: 8px;
-        background: #333;
-        border-radius: 6px;
+
+    #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
-    input, button {
-        padding: 12px;
+
+    .message {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 20px;
+        color: #fff;
+        word-wrap: break-word;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .own {
+        background: linear-gradient(120deg, #4facfe, #00f2fe);
+        align-self: flex-end;
+        border-bottom-right-radius: 0;
+    }
+
+    .other {
+        background: linear-gradient(120deg, #ff9a9e, #fecfef);
+        align-self: flex-start;
+        border-bottom-left-radius: 0;
+    }
+
+    @keyframes fadeIn {
+        from {opacity:0; transform: translateY(10px);}
+        to {opacity:1; transform: translateY(0);}
+    }
+
+    #inputBar {
+        display: flex;
+        padding: 10px;
+        background: rgba(255,255,255,0.15);
+        gap: 10px;
+    }
+
+    #msgBox {
+        flex: 1;
         border: none;
-        border-radius: 6px;
+        border-radius: 20px;
+        padding: 12px 15px;
         font-size: 16px;
+        outline: none;
     }
-    input {
-        width: 70%;
-        background: #222;
-        color: #fff;
-    }
+
     button {
-        width: 28%;
-        background: #4a7fff;
+        border: none;
+        border-radius: 20px;
+        padding: 12px 20px;
+        background: #ff6a95;
         color: #fff;
+        font-weight: bold;
         cursor: pointer;
+        transition: transform 0.2s ease;
     }
+
+    button:hover {
+        transform: scale(1.05);
+    }
+
+    #joinContainer {
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        gap: 10px;
+    }
+
+    #joinContainer input {
+        padding: 10px;
+        border-radius: 15px;
+        border: none;
+        outline: none;
+        font-size: 14px;
+    }
+
 </style>
 </head>
 <body>
-<div id="container">
-    <h2>Private Chat</h2>
+<div id="chatContainer">
+    <div id="header">QUARKS</div>
 
-    <input id="room" placeholder="Room name (example: rose123)" />
-    <input id="nick" placeholder="Your nickname" style="margin-top:10px;" />
-    <button onclick="connectChat()" style="margin-top:10px;">Join</button>
+    <div id="joinContainer">
+        <input id="room" placeholder="Room name (example: rose123)">
+        <input id="nick" placeholder="Your nickname">
+        <button onclick="connectChat()">Join Room</button>
+    </div>
 
-    <div id="messages"></div>
+    <div id="messages" style="display:none;"></div>
 
-    <input id="msgBox" placeholder="Write a message..." />
-    <button onclick="sendMsg()">Send</button>
+    <div id="inputBar" style="display:none;">
+        <input id="msgBox" placeholder="Write a message...">
+        <button onclick="sendMsg()">Send</button>
+    </div>
 </div>
 
 <script>
 let ws;
+let myNick = "";
 
 function connectChat() {
     const room = document.getElementById("room").value;
-    const nick = document.getElementById("nick").value;
+    myNick = document.getElementById("nick").value;
+
+    if (!room || !myNick) return alert("Enter both room and nickname!");
 
     ws = new WebSocket("wss://hack.chat/chat-ws");
 
@@ -76,24 +153,31 @@ function connectChat() {
         ws.send(JSON.stringify({
             cmd: "join",
             channel: room,
-            nick: nick
+            nick: myNick
         }));
-        addMessage("Connected to room: " + room);
+
+        document.getElementById("joinContainer").style.display = "none";
+        document.getElementById("messages").style.display = "flex";
+        document.getElementById("inputBar").style.display = "flex";
+
+        addMessage("Connected to room: " + room, "system");
     };
 
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.cmd === "chat") {
-            addMessage(`${data.nick}: ${data.text}`);
+            const type = data.nick === myNick ? "own" : "other";
+            addMessage(`${data.nick}: ${data.text}`, type);
         }
     };
 
-    ws.onclose = () => addMessage("Disconnected.");
+    ws.onclose = () => addMessage("Disconnected.", "system");
 }
 
-function addMessage(text) {
-    let messages = document.getElementById("messages");
-    let div = document.createElement("div");
+function addMessage(text, type) {
+    const messages = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = type === "own" ? "message own" : type === "other" ? "message other" : "message system";
     div.textContent = text;
     messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
@@ -101,12 +185,11 @@ function addMessage(text) {
 
 function sendMsg() {
     const msg = document.getElementById("msgBox").value;
-
+    if (!msg) return;
     ws.send(JSON.stringify({
         cmd: "chat",
         text: msg
     }));
-
     document.getElementById("msgBox").value = "";
 }
 </script>

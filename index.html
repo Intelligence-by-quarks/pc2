@@ -3,128 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quarks</title>
+<title>QUARKS</title>
 <style>
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(to right, #ff9a9e, #fad0c4);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-#chatContainer {
-    width: 520px;
-    height: 720px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border-radius: 25px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-}
-#header {
-    text-align: center;
-    padding: 20px;
-    background: rgba(255,255,255,0.2);
-    font-size: 1.5em;
-    font-weight: bold;
-    color: #fff;
-}
-#messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.message {
-    max-width: 75%;
-    padding: 12px 18px;
-    border-radius: 25px;
-    color: #fff;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease;
-}
-.own { background: linear-gradient(120deg, #4facfe, #00f2fe); align-self: flex-end; border-bottom-right-radius: 0; }
-.other { background: linear-gradient(120deg, #ff9a9e, #fecfef); align-self: flex-start; border-bottom-left-radius: 0; }
-.system { align-self: center; background: rgba(255,255,255,0.2); color: #fff; border-radius: 15px; }
-img, video { max-width: 250px; border-radius: 15px; }
-#inputBar {
-    display: flex;
-    padding: 12px;
-    background: rgba(255,255,255,0.15);
-    gap: 10px;
-    align-items: center;
-}
-#msgBox {
-    flex: 1;
-    border: none;
-    border-radius: 25px;
-    padding: 12px 18px;
-    font-size: 16px;
-    outline: none;
-}
+body { margin:0; font-family:'Segoe UI',sans-serif; background:linear-gradient(to right,#ff9a9e,#fad0c4); height:100vh; display:flex; justify-content:center; align-items:center; }
+#chatContainer { width:520px; height:720px; background:rgba(255,255,255,0.1); backdrop-filter:blur(15px); border-radius:25px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.4); }
+#header { text-align:center; padding:20px; background:rgba(255,255,255,0.2); font-size:1.5em; font-weight:bold; color:#fff; }
+#messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
+.message { max-width:75%; padding:12px 18px; border-radius:25px; color:#fff; word-wrap:break-word; animation:fadeIn 0.3s ease; }
+.own { background:linear-gradient(120deg,#4facfe,#00f2fe); align-self:flex-end; border-bottom-right-radius:0; }
+.other { background:linear-gradient(120deg,#ff9a9e,#fecfef); align-self:flex-start; border-bottom-left-radius:0; }
+.system { align-self:center; background:rgba(255,255,255,0.2); color:#fff; border-radius:15px; }
+img,video { max-width:250px; border-radius:15px; }
+#inputBar { display:flex; padding:12px; background:rgba(255,255,255,0.15); gap:10px; align-items:center; position:relative; }
+#msgBox { flex:1; border:none; border-radius:25px; padding:12px 18px; font-size:16px; outline:none; }
 #msgBox::placeholder { color: rgba(255,255,255,0.7); }
-button {
-    border: none;
-    border-radius: 25px;
-    padding: 12px 20px;
-    background: #ff6a95;
-    color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-button:hover { transform: scale(1.05); }
-#joinContainer { display: flex; flex-direction: column; padding: 25px; gap: 12px; }
-#joinContainer input { padding: 12px; border-radius: 15px; border: none; outline: none; font-size: 16px; }
-#fileInputLabel, #emojiBtn {
-    background: rgba(255,255,255,0.2);
-    padding: 10px 12px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-}
-#emojiPicker {
-    position: absolute;
-    bottom: 70px;
-    left: 10px;
-    width: 250px;
-    max-height: 200px;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
-    overflow-y: auto;
-    display: none;
-    flex-wrap: wrap;
-    border-radius: 15px;
-    padding: 10px;
-    z-index: 100;
-}
-.emoji { font-size: 22px; padding: 5px; cursor: pointer; transition: transform 0.1s ease; }
-.emoji:hover { transform: scale(1.2); }
-@keyframes fadeIn { from {opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
+button { border:none; border-radius:25px; padding:12px 20px; background:#ff6a95; color:#fff; font-weight:bold; cursor:pointer; transition: transform 0.2s ease; }
+button:hover { transform:scale(1.05); }
+#joinContainer { display:flex; flex-direction:column; padding:25px; gap:12px; }
+#joinContainer input { padding:12px; border-radius:15px; border:none; outline:none; font-size:16px; }
+#fileInputLabel, #emojiBtn { background:rgba(255,255,255,0.2); padding:10px 12px; border-radius:50%; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; color:#fff; }
+#emojiPicker { position:absolute; bottom:70px; left:10px; width:250px; max-height:200px; background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); overflow-y:auto; display:none; flex-wrap:wrap; border-radius:15px; padding:10px; z-index:100; }
+.emoji { font-size:22px; padding:5px; cursor:pointer; transition: transform 0.1s ease; }
+.emoji:hover { transform:scale(1.2); }
+@keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
 </style>
 </head>
 <body>
 <div id="chatContainer">
-    <div id="header">Quarks</div>
-
+    <div id="header">QUARKS</div>
     <div id="joinContainer">
         <input id="room" placeholder="Room name (example: rose123)">
         <input id="nick" placeholder="Your nickname">
         <button onclick="connectChat()">Join Room</button>
     </div>
-
     <div id="messages" style="display:none;"></div>
-
     <div id="inputBar" style="display:none;">
         <input id="msgBox" placeholder="Write a message..." onkeydown="checkEnter(event)">
         <label id="fileInputLabel" for="fileInput">📎</label>
@@ -137,112 +49,61 @@ button:hover { transform: scale(1.05); }
 
 <script>
 let ws;
-let myNick = "";
-const emojis = ["😀","😁","😂","🤣","😃","😄","😅","😆","😉","😊","😋","😎","😍","😘","🥰","😗","😙","😚","🙂","🤗","🤩","🤔","😐","😑","😶","🙄","😏","😣","😥","😮","🤐","😯","😪","😫","🥱","😴","😌","😛","😜","😝","🤤","😒","😓","😔","😕","🙃","🫠","😲","☹️","🙁","😖","😞","😟","😤","😢","😭","😦","😧","😨","😩","🥺","😬","😰","😱","🥵","🥶","😳","🤯","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖"];
-
-function populateEmojis() {
-    const picker = document.getElementById("emojiPicker");
-    picker.innerHTML = "";
-    emojis.forEach(e => {
-        const span = document.createElement("span");
-        span.textContent = e;
-        span.className = "emoji";
-        span.onclick = () => { document.getElementById("msgBox").value += e; }
-        picker.appendChild(span);
-    });
-}
+let myNick="";
+const emojis=["😀","😁","😂","🤣","😃","😄","😅","😆","😉","😊","😋","😎","😍","😘","🥰","😗","😙","😚","🙂","🤗","🤩","🤔","😐","😑","😶","🙄","😏","😣","😥","😮","🤐","😯","😪","😫","🥱","😴","😌","😛","😜","😝","🤤","😒","😓","😔","😕","🙃","🫠","😲","☹️","🙁","😖","😞","😟","😤","😢","😭","😦","😧","😨","😩","🥺","😬","😰","😱","🥵","🥶","😳","🤯","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖"];
+function populateEmojis(){const picker=document.getElementById("emojiPicker");picker.innerHTML="";emojis.forEach(e=>{const span=document.createElement("span");span.textContent=e;span.className="emoji";span.onclick=()=>{document.getElementById("msgBox").value+=e;};picker.appendChild(span);});}
 populateEmojis();
 
-function toggleEmojiPicker() {
-    const picker = document.getElementById("emojiPicker");
-    picker.style.display = picker.style.display === "flex" ? "none" : "flex";
+function toggleEmojiPicker(){const picker=document.getElementById("emojiPicker");picker.style.display=picker.style.display==="flex"?"none":"flex";}
+document.addEventListener("click",(e)=>{const picker=document.getElementById("emojiPicker");const btn=document.getElementById("emojiBtn");if(!picker.contains(e.target)&&!btn.contains(e.target)){picker.style.display="none";}});
+
+function connectChat(){
+    const room=document.getElementById("room").value;
+    myNick=document.getElementById("nick").value;
+    if(!room||!myNick)return alert("Enter both room and nickname!");
+    ws=new WebSocket("wss://hack.chat/chat-ws");
+    ws.onopen=()=>{ws.send(JSON.stringify({cmd:"join",channel:room,nick:myNick}));document.getElementById("joinContainer").style.display="none";document.getElementById("messages").style.display="flex";document.getElementById("inputBar").style.display="flex";addMessage("Connected to room: "+room,"system");};
+    ws.onmessage=(event)=>{const data=JSON.parse(event.data);if(data.cmd==="chat")displayMessage(data.nick,data.text);};
+    ws.onclose=()=>addMessage("Disconnected.","system");
 }
 
-function connectChat() {
-    const room = document.getElementById("room").value;
-    myNick = document.getElementById("nick").value;
-    if (!room || !myNick) return alert("Enter both room and nickname!");
+// Send a message (text or file)
+function sendMsg(){
+    const msgBox=document.getElementById("msgBox");
+    const fileInput=document.getElementById("fileInput");
+    const msg=msgBox.value.trim();
 
-    ws = new WebSocket("wss://hack.chat/chat-ws");
-
-    ws.onopen = () => {
-        ws.send(JSON.stringify({cmd: "join", channel: room, nick: myNick}));
-        document.getElementById("joinContainer").style.display = "none";
-        document.getElementById("messages").style.display = "flex";
-        document.getElementById("inputBar").style.display = "flex";
-        addMessage("Connected to room: " + room, "system");
-    };
-
-    ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.cmd === "chat") displayMessage(data.nick, data.text);
-    };
-
-    ws.onclose = () => addMessage("Disconnected.", "system");
-}
-
-function displayMessage(nick, text) {
-    const type = nick === myNick ? "own" : "other";
-    const messages = document.getElementById("messages");
-    const div = document.createElement("div");
-    div.className = type === "own" ? "message own" : type === "other" ? "message other" : "message system";
-
-    if (text.startsWith("data:")) {
-        if (text.includes("video")) {
-            const video = document.createElement("video");
-            video.src = text;
-            video.controls = true;
-            div.appendChild(video);
-        } else {
-            const img = document.createElement("img");
-            img.src = text;
-            div.appendChild(img);
-        }
-    } else {
-        div.textContent = `${nick}: ${text}`;
-    }
-
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-}
-
-function addMessage(text, type) {
-    const messages = document.getElementById("messages");
-    const div = document.createElement("div");
-    div.className = "message " + type;
-    div.textContent = text;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-}
-
-function sendMsg() {
-    const msgBox = document.getElementById("msgBox");
-    const fileInput = document.getElementById("fileInput");
-    const msg = msgBox.value.trim();
-
-    // Only send one bubble per send
-    if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            ws.send(JSON.stringify({cmd: "chat", text: e.target.result}));
-        }
+    if(fileInput.files.length>0){
+        const file=fileInput.files[0];
+        const reader=new FileReader();
+        reader.onload=function(e){ws.send(JSON.stringify({cmd:"chat",text:e.target.result}));}
         reader.readAsDataURL(file);
-        fileInput.value = "";
+        fileInput.value="";
     }
 
-    if (msg !== "") {
-        ws.send(JSON.stringify({cmd: "chat", text: msg}));
-        msgBox.value = "";
+    if(msg!==""){
+        ws.send(JSON.stringify({cmd:"chat",text:msg}));
+        msgBox.value="";
     }
 }
 
-function checkEnter(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMsg();
-    }
+function displayMessage(nick,text){
+    const type=nick===myNick?"own":nick==="system"?"system":"other";
+    const messages=document.getElementById("messages");
+    const div=document.createElement("div");
+    div.className=type==="own"?"message own":type==="other"?"message other":"message system";
+
+    if(text.startsWith("data:")){
+        if(text.includes("video")){const video=document.createElement("video");video.src=text;video.controls=true;div.appendChild(video);}
+        else{const img=document.createElement("img");img.src=text;div.appendChild(img);}
+    } else div.textContent=`${nick}: ${text}`;
+
+    messages.appendChild(div);
+    messages.scrollTop=messages.scrollHeight;
 }
+
+// Send by Enter
+function checkEnter(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}}
 </script>
 </body>
 </html>

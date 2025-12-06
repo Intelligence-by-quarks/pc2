@@ -1,278 +1,283 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>hack.chat-like client (single file)</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Hack.Chat — Cleaner UI</title>
 <style>
-  :root{--bg:#0b0b0b;--accent:#39d353;--muted:#2a2a2a;--text:#dfffe0}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#020202,#0b0b0b);font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;color:var(--text)}
-  .app{max-width:900px;margin:18px auto;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 40px rgba(0,0,0,0.6)}
-  header{background:#070707;padding:12px 16px;display:flex;align-items:center;gap:12px}
-  header .title{font-weight:700;color:var(--accent)}
-  main{display:flex;height:72vh}
-  .sidebar{width:260px;border-right:1px solid rgba(255,255,255,0.03);padding:12px;background:linear-gradient(180deg,#070707,#0b0b0b)}
-  .roomLabel{font-size:13px;color:#9fb39f;margin-bottom:8px}
-  .nickBox{display:flex;gap:8px;margin-bottom:8px}
-  .nickBox input{flex:1;padding:10px;border-radius:6px;border:1px solid #222;background:#0e0e0e;color:var(--text)}
-  .btn{padding:9px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);background:#111;color:var(--accent);cursor:pointer}
-  .mainArea{flex:1;display:flex;flex-direction:column}
-  #log{flex:1;padding:12px;overflow:auto;background:linear-gradient(180deg,#040404,#070707)}
-  .line{margin:6px 0;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.02)}
-  .line.me{background:linear-gradient(90deg,#0e3b7a,#1e90ff);color:white;text-align:right}
-  .meta{font-size:12px;color:#9fb39f;margin-bottom:6px}
-  .sendBox{display:flex;padding:12px;border-top:1px solid rgba(255,255,255,0.03);gap:8px}
-  .sendBox input{flex:1;padding:12px;border-radius:6px;border:1px solid #222;background:#0e0e0e;color:var(--text)}
-  .small{font-size:12px;color:#9fb39f}
-  .sys{font-size:12px;color:#bbb;opacity:0.9}
+  :root{
+    --bg:#0f1720; --panel:#0b1220; --muted:#9aa6b2; --accent:#6ee7b7;
+    --msg-bg: rgba(255,255,255,0.02);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071021,#0b1220);color:#e6eef6}
+  .app{display:flex;max-width:1100px;margin:18px auto;height:calc(100vh - 36px);border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+  .left{flex:1;display:flex;flex-direction:column;background:var(--panel);padding:14px 16px;gap:10px}
+  .header{display:flex;align-items:center;justify-content:space-between}
+  .room{font-weight:600;letter-spacing:0.2px}
+  .status{font-size:12px;color:var(--muted)}
+  .messages{flex:1;overflow:auto;padding:6px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
+  .msg{padding:8px 10px;margin:6px 0;border-radius:8px;background:var(--msg-bg);display:flex;gap:10px;align-items:flex-start}
+  .avatar{width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#071021}
+  .meta{font-size:13px}
+  .nick{font-weight:700}
+  .time{font-size:11px;color:var(--muted);margin-left:8px}
+  .text{margin-top:4px;color:#dff1e9;white-space:pre-wrap}
+  .composer{display:flex;gap:8px;align-items:center}
+  .input{flex:1;background:#02101a;border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:8px;color:inherit}
+  .send{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;font-weight:700;color:#052322;cursor:pointer}
+  .right{width:260px;background:linear-gradient(180deg,#061021,#071019);padding:12px;display:flex;flex-direction:column;gap:10px}
+  .users{overflow:auto;flex:1;padding:6px}
+  .user{display:flex;gap:8px;align-items:center;padding:6px;border-radius:8px}
+  .muted{color:var(--muted);font-size:13px}
+  .small{font-size:12px;color:var(--muted)}
+  .notice{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;font-size:13px}
+  @media(max-width:900px){
+    .app{flex-direction:column;height:auto;margin:12px}
+    .right{width:100%;order:3}
+  }
 </style>
 </head>
 <body>
-<div class="app" role="application" aria-label="Private hack.chat-like client">
-  <header>
-    <div class="title">Private Chat</div>
-    <div style="margin-left:auto" class="small">hack.chat relay client</div>
-  </header>
-
-  <main>
-    <aside class="sidebar" aria-hidden="false">
-      <div class="roomLabel">Room (from URL)</div>
-      <div id="roomDisplay" class="small sys">—</div>
-
-      <div style="margin-top:14px" class="roomLabel">Nickname</div>
-      <div class="nickBox">
-        <input id="nickInput" placeholder="choose a nick" />
-        <button id="joinBtn" class="btn">Join</button>
+<div class="app" id="app">
+  <div class="left">
+    <div class="header">
+      <div>
+        <div class="room" id="roomName">room</div>
+        <div class="status" id="status">connecting…</div>
       </div>
+      <div class="small" id="nickLabel">nick</div>
+    </div>
 
-      <div style="margin-top:16px" class="roomLabel">Connection</div>
-      <div id="status" class="small sys">disconnected</div>
+    <div class="messages" id="messages" aria-live="polite"></div>
 
-      <div style="margin-top:12px" class="roomLabel">Hints</div>
-      <div class="small">Open this same page (same ?room=NAME) in another tab or give the URL to the other person.</div>
-      <div style="margin-top:8px" class="small">Room privacy: pick a unique room name nobody else knows.</div>
-    </aside>
+    <div class="composer">
+      <input id="messageInput" class="input" placeholder="Type a message and press Enter…" autocomplete="off" />
+      <button id="sendBtn" class="send">Send</button>
+    </div>
+  </div>
 
-    <section class="mainArea">
-      <div id="log" aria-live="polite"></div>
+  <aside class="right">
+    <div class="notice">
+      <div style="font-weight:700">Users in room</div>
+      <div class="small" id="hint">This is a wrapper client for hack.chat — same room, nicer UI.</div>
+    </div>
+    <div class="users" id="users"></div>
 
-      <div class="sendBox">
-        <input id="msgInput" placeholder="Type message and press Enter" aria-label="message input" />
-        <button id="sendBtn" class="btn">Send</button>
-      </div>
-    </section>
-  </main>
+    <div class="notice small">Room URL format: <code>/?room=roomname&nick=yourname</code></div>
+  </aside>
 </div>
 
 <script>
-/* ========= behavior =========
- - Reads room from:
-    ?room=NAME  OR ?(NAME)  OR location.hash
- - Connects to wss://ws.hack.chat/chat-ws
- - Sends proper join: {cmd:"join",nick:N,channel:ROOM}
- - Sends chat: {cmd:"chat", text: "..."}   <-- NO channel here
- - Shows own messages locally and remote messages.
- - Enter to send, reconnect attempts on close.
+/*
+  Simple hack.chat wrapper client.
+  - Gateway: wss://hack.chat/chat-ws
+  - Join payload format used by community clients:
+      { cmd: "join", channel: ROOM, nick: NICK, pass: optionalPass }
+  - To send messages we use { cmd: "say", channel: ROOM, text: TEXT }
+  Notes: This client is intentionally minimal. You can extend: markdown, file share, colors etc.
 */
 
-// helper DOM
-const $ = sel => document.querySelector(sel);
-const logEl = $("#log");
-const roomDisplay = $("#roomDisplay");
-const nickInput = $("#nickInput");
-const joinBtn = $("#joinBtn");
-const status = $("#status");
-const msgInput = $("#msgInput");
-const sendBtn = $("#sendBtn");
+const WS_GATEWAY = 'wss://hack.chat/chat-ws';
 
-let ws = null;
-let room = "";
-let nick = "";
-let connected = false;
-let isJoining = false;
-let reconnectTimer = null;
-let pendingSends = [];
+// helpers
+const $ = id => document.getElementById(id);
+const qs = (k, fallback) => (new URLSearchParams(location.search).get(k) || fallback);
 
-// Parse room from many URL styles
-function parseRoomFromURL(){
-  const u = window.location.href;
-  // 1) query param ?room=name
-  const params = new URLSearchParams(window.location.search);
-  if(params.get("room")) return params.get("room").trim();
+let room = (qs('room') || '').trim();
+let nick = (qs('nick') || '').trim();
+if (!room) room = prompt("Room name (shared with other people):", "programming") || "programming";
+if (!nick) nick = prompt("Choose a nickname (what others see):", "anon") || ("anon"+Math.floor(Math.random()*999));
 
-  // 2) hack.chat style: ?(room) or ?(room-name)
-  const raw = window.location.search || "";
-  const m = raw.match(/^\?\(([^)]+)\)/);
-  if(m) return decodeURIComponent(m[1]).trim();
+$('roomName').textContent = '# ' + room;
+$('nickLabel').textContent = nick;
 
-  // 3) hash fallback
-  if(window.location.hash) return window.location.hash.substring(1).trim();
+const messagesEl = $('messages');
+const usersEl = $('users');
+const statusEl = $('status');
+const inputEl = $('messageInput');
+const sendBtn = $('sendBtn');
 
-  return "";
+let socket = null;
+let online = new Set();
+
+// deterministic color for a nick
+function nickColor(n){
+  let h = 0;
+  for (let i=0;i<n.length;i++) h = (h<<5) - h + n.charCodeAt(i);
+  h = Math.abs(h);
+  const hue = h % 360;
+  // pastel-ish background color (HSL)
+  return `hsl(${hue} 70% 70%)`;
 }
 
-function setStatus(text){
-  status.textContent = text;
+function addUser(n){
+  online.add(n);
+  renderUsers();
+}
+function removeUser(n){
+  online.delete(n);
+  renderUsers();
+}
+function setUserList(arr){
+  online = new Set(arr || []);
+  renderUsers();
+}
+function renderUsers(){
+  usersEl.innerHTML = '';
+  const sorted = Array.from(online).sort((a,b)=>a.localeCompare(b));
+  for (const u of sorted){
+    const d = document.createElement('div');
+    d.className = 'user';
+    d.innerHTML = `<div class="avatar" style="background:${nickColor(u)}">${(u[0]||'?').toUpperCase()}</div>
+      <div style="flex:1"><div style="font-weight:700">${escapeHtml(u)}</div><div class="muted">online</div></div>`;
+    usersEl.appendChild(d);
+  }
 }
 
-// pretty log
-function appendLine(text, cls){
-  const d = document.createElement("div");
-  d.className = "line" + (cls?" "+cls:"");
-  d.textContent = text;
-  logEl.appendChild(d);
-  d.scrollIntoView({behavior:"smooth", block:"end"});
+function formatTime(ts){
+  const d = new Date(ts || Date.now());
+  return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 }
 
-// sanitize to avoid crash on unexpected messages
-function safeParse(s){
-  try{ return JSON.parse(s); } catch(e){ return null; }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 }
 
-// build join payload & open ws
-function startConnection(){
-  if(!room || !nick) return;
-  if(ws && (ws.readyState === WebSocket.OPEN || ws.readyState===WebSocket.CONNECTING)) return;
-
-  appendLine("[system] connecting to hack.chat relay...", "sys");
-  setStatus("connecting...");
-  isJoining = true;
-
-  ws = new WebSocket("wss://ws.hack.chat/chat-ws");
-
-  ws.addEventListener("open", () => {
-    setStatus("connected");
-    appendLine("[system] socket open", "sys");
-    // send join
-    const joinMsg = { cmd: "join", nick: nick, channel: room };
-    try { ws.send(JSON.stringify(joinMsg)); }
-    catch(e){ appendLine("[system] send join failed", "sys"); }
-    connected = true;
-    isJoining = false;
-    // flush any pending sends
-    while(pendingSends.length) {
-      const m = pendingSends.shift();
-      doSendRaw(m);
-    }
-  });
-
-  ws.addEventListener("message", ev => {
-    const data = safeParse(ev.data);
-    if(!data) return;
-    // hack.chat sends different cmd types
-    if(data.cmd === "chat" && typeof data.text === "string"){
-      // remote user's chat
-      appendLine(`${data.nick}: ${data.text}`);
-    } else if(data.cmd === "info"){
-      appendLine(`[info] ${data.text}`, "sys");
-    } else if(data.cmd === "onlineSet" && Array.isArray(data.nicks)){
-      appendLine(`[system] users online: ${data.nicks.join(", ")}`, "sys");
-    } else if(data.cmd === "raw"){
-      // ignore
-    } else {
-      // other things
-      //console.debug("unhandled", data);
-    }
-  });
-
-  ws.addEventListener("close", ev => {
-    connected = false;
-    setStatus("disconnected");
-    appendLine("[system] socket closed, attempting reconnect...", "sys");
-    // attempt reconnect after short delay
-    if(reconnectTimer) clearTimeout(reconnectTimer);
-    reconnectTimer = setTimeout(()=> {
-      // ensure socket destroyed
-      try { ws.close(); } catch(e){}
-      ws = null;
-      startConnection();
-    }, 2200);
-  });
-
-  ws.addEventListener("error", e => {
-    setStatus("error");
-    appendLine("[system] socket error", "sys");
-  });
+function addMessage(nickStr, text, ts, opts = {}){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg';
+  const av = document.createElement('div');
+  av.className='avatar';
+  av.style.background = nickColor(nickStr || '');
+  av.textContent = (nickStr && nickStr[0]) ? nickStr[0].toUpperCase() : '?';
+  const content = document.createElement('div');
+  content.className = 'meta';
+  const metaRow = document.createElement('div');
+  metaRow.innerHTML = `<span class="nick">${escapeHtml(nickStr||'')}</span>
+                       <span class="time">${formatTime(ts)}</span>`;
+  const textRow = document.createElement('div');
+  textRow.className = 'text';
+  textRow.innerHTML = escapeHtml(text||'');
+  content.appendChild(metaRow);
+  content.appendChild(textRow);
+  wrap.appendChild(av);
+  wrap.appendChild(content);
+  messagesEl.appendChild(wrap);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// send raw (assumes ws open)
-function doSendRaw(obj){
-  if(!ws || ws.readyState !== WebSocket.OPEN){
-    pendingSends.push(obj);
+// Connect & wire websocket handlers
+function connect(){
+  statusEl.textContent = 'connecting…';
+  try {
+    socket = new WebSocket(WS_GATEWAY);
+  } catch(e){
+    statusEl.textContent = 'connection failed';
+    addMessage('system','WebSocket could not be created: '+e.message, Date.now());
     return;
   }
-  try { ws.send(JSON.stringify(obj)); }
-  catch(e){
-    pendingSends.push(obj);
-  }
+
+  socket.addEventListener('open', () => {
+    statusEl.textContent = 'connected — joining room…';
+    // join payload (community clients use this format)
+    const joinPayload = { cmd:'join', channel: room, nick: nick };
+    socket.send(JSON.stringify(joinPayload));
+    // simple keepalive ping so server knows we're alive (optional)
+    setInterval(()=>{ if(socket && socket.readyState===1) socket.send(JSON.stringify({cmd:'ping'})); }, 30000);
+  });
+
+  socket.addEventListener('message', (ev) => {
+    // server sends JSON packets; we handle common cmd types
+    let data;
+    try { data = JSON.parse(ev.data); } catch(err){ console.warn('non-json',ev.data); return; }
+
+    // Most common fields from community implementations:
+    // - cmd: 'chat' / 'message' / 'onlineSet' / 'onlineAdd' / 'onlineRemove' / 'ping' / 'info'
+    const cmd = data.cmd || '';
+    switch(cmd){
+      case 'chat':
+      case 'message':
+      case 'msg':
+        // typical chat message object variants: {cmd:'chat', channel:'room', nick:'Bob', text:'hi', time:ts}
+        addMessage(data.nick || data.from || 'unknown', data.text || data.message || data.msg || '', data.time || Date.now());
+        break;
+      case 'onlineSet':
+        // payload.users = [...]
+        setUserList(data.users || []);
+        break;
+      case 'onlineAdd':
+        addUser(data.nick || data.user);
+        break;
+      case 'onlineRemove':
+        removeUser(data.nick || data.user);
+        break;
+      case 'info':
+        addMessage('system', data.text || JSON.stringify(data), Date.now());
+        break;
+      case 'ping':
+        // ignore or reply if needed
+        break;
+      case 'captcha':
+        addMessage('system','Captcha required by server — you may be rate limited', Date.now());
+        break;
+      default:
+        // Some servers send messages with other fields (e.g. {nick, text} without cmd) — try to be flexible:
+        if (data.nick && (data.text || data.message)) addMessage(data.nick, data.text || data.message, data.time || Date.now());
+        // otherwise, ignore or log
+        // console.debug('unhandled', data);
+    }
+  });
+
+  socket.addEventListener('close', (ev) => {
+    statusEl.textContent = 'disconnected';
+    addMessage('system','Disconnected from server', Date.now());
+    // try reconnect after a short delay
+    setTimeout(()=>{ connect(); }, 2500);
+  });
+
+  socket.addEventListener('error', (err) => {
+    statusEl.textContent = 'error';
+    console.error('ws err', err);
+  });
 }
 
-// public send message (shows own message and sends chat)
-function sendChatText(text){
-  if(!text) return;
-  // show locally immediately
-  appendLine(`${nick}: ${text}`, "me");
-  // hack.chat expects {cmd:"chat", text: "..."} with NO channel
-  const payload = { cmd: "chat", text: text };
-  doSendRaw(payload);
-}
-
-// parse initial room
-room = parseRoomFromURL();
-if(!room){
-  // try to prompt once (if page opened without room)
-  const r = prompt("Enter room name to join (this will appear in the URL):");
-  if(r) {
-    room = r.trim();
-    // update URL to include ?room=... for convenience
-    const newUrl = new URL(window.location.href);
-    newUrl.search = "?room=" + encodeURIComponent(room);
-    window.history.replaceState({}, "", newUrl.toString());
+// send text: try common 'say' payload used by community wrappers
+function sendText(text){
+  if (!socket || socket.readyState !== 1) {
+    addMessage('system','Not connected — message not sent', Date.now());
+    return;
   }
+  const payload = { cmd:'say', channel: room, text: text };
+  // also send an alternate form (raw 'msg') for compatibility — some servers accept different fields
+  try {
+    socket.send(JSON.stringify(payload));
+  } catch(e){
+    console.error('send failed', e);
+  }
+  // show local echo immediately
+  addMessage(nick, text, Date.now(), {local:true});
+  inputEl.value = '';
 }
-roomDisplay.textContent = room || "(no room)";
 
-// wire UI
-joinBtn.addEventListener("click", () => {
-  const n = nickInput.value.trim();
-  if(!n){ alert("Enter a nickname"); nickInput.focus(); return; }
-  nick = n;
-  startConnection();
-  setStatus("connecting (join sent)");
+// UI events
+sendBtn.addEventListener('click', () => {
+  const v = inputEl.value.trim();
+  if (v) sendText(v);
 });
-
-sendBtn.addEventListener("click", () => {
-  const t = msgInput.value.trim();
-  if(!t) return;
-  if(!nick || !room) { alert("You must join first (room & nick)."); return; }
-  sendChatText(t);
-  msgInput.value = "";
-  msgInput.focus();
-});
-
-// enter key to send message
-msgInput.addEventListener("keydown", (ev) => {
-  if(ev.key === "Enter" && !ev.shiftKey){
-    ev.preventDefault();
-    sendBtn.click();
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const v = inputEl.value.trim();
+    if (v) sendText(v);
   }
 });
 
-// allow pressing Enter in nick input to join quickly
-nickInput.addEventListener("keydown", (ev)=>{
-  if(ev.key === "Enter") joinBtn.click();
-});
+// start
+connect();
 
-// auto-join if nick supplied in URL param ?nick=
-(function tryAutoNick(){
-  const params = new URLSearchParams(window.location.search);
-  const n = params.get("nick") || "";
-  if(n) { nickInput.value = n; nick = n; startConnection(); setStatus("connecting (auto)"); }
-})();
-
-// convenience: show a small system message telling format
-appendLine("[system] room: " + room + "  — share exact URL (including ?room=NAME) with the other person", "sys");
-
+// small accessibility / focus nicety
+inputEl.focus();
 </script>
 </body>
 </html>

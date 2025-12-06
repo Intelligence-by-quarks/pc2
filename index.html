@@ -1,217 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Private Two-Person Chat</title>
+<meta charset="UTF-8" />
+<title>Simple HackChat Clone</title>
 <style>
 body {
+    background: #111;
+    color: #0f0;
+    font-family: monospace;
     margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #1f1c2c, #928dab);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    padding: 0;
 }
-#chat-container {
-    width: 450px;
-    height: 650px;
-    background: #2c2a3c;
-    border-radius: 15px;
+#login {
+    padding: 20px;
+}
+#chat {
+    display: none;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 0 25px rgba(0,0,0,0.6);
-}
-#header {
-    background: #3b3a4a;
-    padding: 15px;
-    color: #fff;
-    text-align: center;
-    font-weight: bold;
-    font-size: 1.3em;
 }
 #messages {
     flex: 1;
-    padding: 10px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    padding: 10px;
 }
-.message {
-    display: flex;
-    max-width: 70%;
-    padding: 10px 15px;
-    border-radius: 20px;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease;
-    position: relative;
-}
-.message.sent {
-    background: #4e9af1;
-    color: #fff;
-    align-self: flex-end;
-    border-bottom-right-radius: 0;
-    flex-direction: row-reverse;
-}
-.message.received {
-    background: #6b6a7a;
-    color: #fff;
-    align-self: flex-start;
-    border-bottom-left-radius: 0;
-}
-.message .avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-.message.sent .avatar {
-    margin-left: 10px;
-    margin-right: 0;
-}
-.message .timestamp {
-    font-size: 0.7em;
-    color: rgba(255,255,255,0.6);
-    position: absolute;
-    bottom: 2px;
-    right: 10px;
-}
-#input-container {
-    display: flex;
-    border-top: 1px solid #444;
-}
-#input-container input {
-    flex: 1;
+input, button {
+    padding: 10px;
     border: none;
-    padding: 15px;
-    font-size: 1em;
     outline: none;
-    background: #3b3a4a;
-    color: #fff;
-    border-radius: 0;
+    font-family: monospace;
 }
-#input-container button {
-    padding: 15px;
-    background: #4e9af1;
-    border: none;
-    color: #fff;
+#msgInput {
+    width: 80%;
+    background: #222;
+    color: #0f0;
+}
+button {
+    background: #333;
+    color: #0f0;
     cursor: pointer;
-    font-weight: bold;
-}
-#input-container button:hover {
-    background: #3572c4;
-}
-#typing-indicator {
-    font-size: 0.85em;
-    color: #ccc;
-    padding-left: 15px;
-    height: 20px;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 </head>
+
 <body>
-<div id="chat-container">
-    <div id="header">Private Chat Room</div>
+
+<div id="login">
+    <h2>Room name?</h2>
+    <input id="room" placeholder="example: 123"><br><br>
+    <h2>Nickname?</h2>
+    <input id="nick" placeholder="your name"><br><br>
+    <button onclick="enterRoom()">Enter Chat</button>
+</div>
+
+<div id="chat">
     <div id="messages"></div>
-    <div id="typing-indicator" id="typing"></div>
-    <div id="input-container">
-        <input type="text" id="messageInput" placeholder="Type a message..." />
-        <button onclick="sendMessage()">Send</button>
+    <div style="padding:10px;">
+        <input id="msgInput" placeholder="type message...">
+        <button onclick="sendMsg()">Send</button>
     </div>
 </div>
 
 <script>
-/* ---------------- PASSWORD ---------------- */
-const PASSWORD = "ansu_"; // change this
-let enteredPassword = prompt("Enter chat password:");
-if(enteredPassword !== PASSWORD){
-    alert("Wrong password! Closing chat.");
-    document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:200px;'>Access Denied</h1>";
-    throw "Access Denied";
-}
+let ws;
+let room = "";
+let nick = "";
 
-/* ---------------- WEBRTC ---------------- */
-const messagesContainer = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
-const typingIndicator = document.getElementById('typing-indicator');
+function enterRoom() {
+    room = document.getElementById("room").value.trim();
+    nick = document.getElementById("nick").value.trim();
 
-let localConnection = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-let dataChannel;
-
-// Avatars
-const myAvatar = "https://i.pravatar.cc/35?img=3";
-const otherAvatar = "https://i.pravatar.cc/35?img=5";
-
-// Role selection
-if(confirm("Are you the first person (create room)? OK = Yes, Cancel = No")){
-    dataChannel = localConnection.createDataChannel("chat");
-    setupDataChannel(dataChannel);
-    localConnection.createOffer().then(offer=>{
-        localConnection.setLocalDescription(offer);
-        prompt("Send this SDP to the other person:", JSON.stringify(offer));
-    });
-} else {
-    localConnection.ondatachannel = event => {
-        dataChannel = event.channel;
-        setupDataChannel(dataChannel);
+    if (!room || !nick) {
+        alert("Enter room & nickname!");
+        return;
     }
-    let remoteSDP = prompt("Paste the SDP from the first person here:");
-    remoteSDP = JSON.parse(remoteSDP);
-    localConnection.setRemoteDescription(remoteSDP).then(()=>{
-        localConnection.createAnswer().then(answer=>{
-            localConnection.setLocalDescription(answer);
-            prompt("Send this SDP back to the first person:", JSON.stringify(answer));
-        });
-    });
-}
 
-// ICE candidates (manual copy/paste if needed)
-localConnection.onicecandidate = event => {
-    if(event.candidate) console.log("ICE candidate:", JSON.stringify(event.candidate));
-};
+    document.getElementById("login").style.display = "none";
+    document.getElementById("chat").style.display = "flex";
 
-/* ---------------- MESSAGE HANDLING ---------------- */
-function setupDataChannel(channel){
-    channel.onopen = () => console.log("Connection established!");
-    channel.onmessage = event => {
-        if(event.data === "__typing__"){
-            typingIndicator.textContent = "Other user is typing...";
-            setTimeout(()=>typingIndicator.textContent="",1000);
-            return;
-        }
-        addMessage(event.data,false);
+    // public websocket relay
+    ws = new WebSocket("wss://ws.postman-echo.com/raw");
+
+    ws.onopen = () => {
+        // announce join
+        ws.send(JSON.stringify({
+            room: room,
+            nick: nick,
+            msg: nick + " joined."
+        }));
+    };
+
+    ws.onmessage = (ev) => {
+        const data = JSON.parse(ev.data);
+
+        if (data.room !== room) return; // ignore other rooms
+
+        const div = document.createElement("div");
+        div.textContent = data.nick + ": " + data.msg;
+        document.getElementById("messages").appendChild(div);
+        div.scrollIntoView();
     };
 }
 
-function sendMessage(){
-    const text = messageInput.value.trim();
-    if(!text || !dataChannel || dataChannel.readyState !== "open") return;
-    dataChannel.send(text);
-    addMessage(text,true);
-    messageInput.value='';
-    messageInput.focus();
-}
+function sendMsg() {
+    const text = document.getElementById("msgInput").value.trim();
+    if (!text) return;
 
-function addMessage(text,isSent){
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('message',isSent?"sent":"received");
-    msgDiv.innerHTML = `<img src="${isSent?myAvatar:otherAvatar}" class="avatar"><div>${text}<span class="timestamp">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>`;
-    messagesContainer.appendChild(msgDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
+    ws.send(JSON.stringify({
+        room: room,
+        nick: nick,
+        msg: text
+    }));
 
-/* ---------------- TYPING INDICATOR ---------------- */
-messageInput.addEventListener("keypress", event=>{
-    if(dataChannel && dataChannel.readyState==="open") dataChannel.send("__typing__");
-    if(event.key==="Enter") sendMessage();
-});
+    document.getElementById("msgInput").value = "";
+}
 </script>
+
 </body>
 </html>

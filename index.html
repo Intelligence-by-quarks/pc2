@@ -3,126 +3,215 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Private Chat ❤️</title>
+<title>Private Two-Person Chat</title>
 <style>
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #fcd5ce, #f8edeb);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
-#chatBox {
-  width: 400px;
-  height: 550px;
-  background: #fff0f5;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  border: 1px solid #ffb6c1;
+#chat-container {
+    width: 450px;
+    height: 650px;
+    background: #2c2a3c;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+}
+#header {
+    background: #3b3a4a;
+    padding: 15px;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.3em;
 }
 #messages {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-#inputArea {
-  display: flex;
-  border-top: 1px solid #ffc0cb;
-  background: #ffe4e1;
-}
-#messageInput {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  border-radius: 0 0 0 20px;
-  background: #fffaf0;
-}
-#sendBtn {
-  padding: 0 20px;
-  border: none;
-  background: #ff69b4;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 0 0 20px 0;
-  transition: background 0.3s;
-}
-#sendBtn:hover {
-  background: #ff1493;
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .message {
-  margin: 5px 0;
-  padding: 10px 15px;
-  border-radius: 20px;
-  max-width: 70%;
-  word-wrap: break-word;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  font-size: 14px;
+    display: flex;
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 20px;
+    word-wrap: break-word;
+    animation: fadeIn 0.3s ease;
+    position: relative;
 }
-.me {
-  align-self: flex-end;
-  background: #ffb6c1;
-  color: #4b0082;
+.message.sent {
+    background: #4e9af1;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+    flex-direction: row-reverse;
 }
-.friend {
-  align-self: flex-start;
-  background: #fff0f5;
-  color: #8b008b;
+.message.received {
+    background: #6b6a7a;
+    color: #fff;
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+}
+.message .avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.message.sent .avatar {
+    margin-left: 10px;
+    margin-right: 0;
+}
+.message .timestamp {
+    font-size: 0.7em;
+    color: rgba(255,255,255,0.6);
+    position: absolute;
+    bottom: 2px;
+    right: 10px;
+}
+#input-container {
+    display: flex;
+    border-top: 1px solid #444;
+}
+#input-container input {
+    flex: 1;
+    border: none;
+    padding: 15px;
+    font-size: 1em;
+    outline: none;
+    background: #3b3a4a;
+    color: #fff;
+    border-radius: 0;
+}
+#input-container button {
+    padding: 15px;
+    background: #4e9af1;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+}
+#input-container button:hover {
+    background: #3572c4;
+}
+#typing-indicator {
+    font-size: 0.85em;
+    color: #ccc;
+    padding-left: 15px;
+    height: 20px;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 </head>
 <body>
-<div id="chatBox">
-  <div id="messages"></div>
-  <div id="inputArea">
-    <input id="messageInput" placeholder="Send a message..." autocomplete="off">
-    <button id="sendBtn">Send</button>
-  </div>
+<div id="chat-container">
+    <div id="header">Private Chat Room</div>
+    <div id="messages"></div>
+    <div id="typing-indicator" id="typing"></div>
+    <div id="input-container">
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
 </div>
 
 <script>
-const messagesDiv = document.getElementById('messages');
-const input = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
-
-// WebSocket connection
-const loc = window.location;
-const wsProtocol = loc.protocol === "https:" ? "wss:" : "ws:";
-const socket = new WebSocket(`${wsProtocol}//${loc.host}/api/ws`);
-
-function addMessage(text, sender){
-  const msg = document.createElement('div');
-  msg.className = 'message ' + sender;
-  msg.textContent = text;
-  messagesDiv.appendChild(msg);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+/* ---------------- PASSWORD ---------------- */
+const PASSWORD = "AADU_"; // change this
+let enteredPassword = prompt("Enter chat password:");
+if(enteredPassword !== PASSWORD){
+    alert("Wrong password! Closing chat.");
+    document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:200px;'>Access Denied</h1>";
+    throw "Access Denied";
 }
 
-sendBtn.addEventListener('click', () => {
-  const text = input.value.trim();
-  if(!text) return;
-  addMessage(text, 'me');
-  socket.send(text);
-  input.value = '';
-});
+/* ---------------- WEBRTC ---------------- */
+const messagesContainer = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
+const typingIndicator = document.getElementById('typing-indicator');
 
-input.addEventListener('keypress', e => {
-  if(e.key === 'Enter') sendBtn.click();
-});
+let localConnection = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+let dataChannel;
 
-socket.addEventListener('message', e => addMessage(e.data,'friend'));
-socket.addEventListener('open', () => console.log("Connected to chat server"));
-socket.addEventListener('close', () => console.log("Disconnected"));
-socket.addEventListener('error', err => console.error("WebSocket error:", err));
+// Avatars
+const myAvatar = "https://i.pravatar.cc/35?img=3";
+const otherAvatar = "https://i.pravatar.cc/35?img=5";
+
+// Role selection
+if(confirm("Are you the first person (create room)? OK = Yes, Cancel = No")){
+    dataChannel = localConnection.createDataChannel("chat");
+    setupDataChannel(dataChannel);
+    localConnection.createOffer().then(offer=>{
+        localConnection.setLocalDescription(offer);
+        prompt("Send this SDP to the other person:", JSON.stringify(offer));
+    });
+} else {
+    localConnection.ondatachannel = event => {
+        dataChannel = event.channel;
+        setupDataChannel(dataChannel);
+    }
+    let remoteSDP = prompt("Paste the SDP from the first person here:");
+    remoteSDP = JSON.parse(remoteSDP);
+    localConnection.setRemoteDescription(remoteSDP).then(()=>{
+        localConnection.createAnswer().then(answer=>{
+            localConnection.setLocalDescription(answer);
+            prompt("Send this SDP back to the first person:", JSON.stringify(answer));
+        });
+    });
+}
+
+// ICE candidates (manual copy/paste if needed)
+localConnection.onicecandidate = event => {
+    if(event.candidate) console.log("ICE candidate:", JSON.stringify(event.candidate));
+};
+
+/* ---------------- MESSAGE HANDLING ---------------- */
+function setupDataChannel(channel){
+    channel.onopen = () => console.log("Connection established!");
+    channel.onmessage = event => {
+        if(event.data === "__typing__"){
+            typingIndicator.textContent = "Other user is typing...";
+            setTimeout(()=>typingIndicator.textContent="",1000);
+            return;
+        }
+        addMessage(event.data,false);
+    };
+}
+
+function sendMessage(){
+    const text = messageInput.value.trim();
+    if(!text || !dataChannel || dataChannel.readyState !== "open") return;
+    dataChannel.send(text);
+    addMessage(text,true);
+    messageInput.value='';
+    messageInput.focus();
+}
+
+function addMessage(text,isSent){
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message',isSent?"sent":"received");
+    msgDiv.innerHTML = `<img src="${isSent?myAvatar:otherAvatar}" class="avatar"><div>${text}<span class="timestamp">${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>`;
+    messagesContainer.appendChild(msgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+/* ---------------- TYPING INDICATOR ---------------- */
+messageInput.addEventListener("keypress", event=>{
+    if(dataChannel && dataChannel.readyState==="open") dataChannel.send("__typing__");
+    if(event.key==="Enter") sendMessage();
+});
 </script>
 </body>
 </html>

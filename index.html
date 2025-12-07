@@ -1,142 +1,454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💖 Private Chat 💖</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Quarks</title>
 <style>
-body { margin:0; font-family:'Segoe UI',sans-serif; background:linear-gradient(to right,#ff9a9e,#fad0c4); height:100vh; display:flex; justify-content:center; align-items:center; }
-#chatContainer { width:520px; height:720px; background:rgba(255,255,255,0.1); backdrop-filter:blur(15px); border-radius:25px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.4); }
-#header { text-align:center; padding:20px; background:rgba(255,255,255,0.2); font-size:1.5em; font-weight:bold; color:#fff; }
-#messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
-.message { max-width:75%; padding:12px 18px; border-radius:25px; color:#fff; word-wrap:break-word; animation:fadeIn 0.3s ease; }
-.own { background:linear-gradient(120deg,#4facfe,#00f2fe); align-self:flex-end; border-bottom-right-radius:0; }
-.other { background:linear-gradient(120deg,#ff9a9e,#fecfef); align-self:flex-start; border-bottom-left-radius:0; }
-.system { align-self:center; background:rgba(255,255,255,0.2); color:#fff; border-radius:15px; }
-#inputBar { display:flex; padding:12px; background:rgba(255,255,255,0.15); gap:10px; align-items:center; position:relative; }
-#msgBox { flex:1; border:none; border-radius:25px; padding:12px 18px; font-size:16px; outline:none; }
-#msgBox::placeholder { color: rgba(255,255,255,0.7); }
-button { border:none; border-radius:25px; padding:12px 20px; background:#ff6a95; color:#fff; font-weight:bold; cursor:pointer; transition: transform 0.2s ease; }
-button:hover { transform:scale(1.05); }
-#joinContainer { display:flex; flex-direction:column; padding:25px; gap:12px; }
-#joinContainer input { padding:12px; border-radius:15px; border:none; outline:none; font-size:16px; }
-#emojiBtn { background:rgba(255,255,255,0.2); padding:10px 12px; border-radius:50%; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; color:#fff; }
-#emojiPicker { position:absolute; bottom:70px; left:10px; width:250px; max-height:200px; background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); display:none; overflow-y:auto; flex-wrap:wrap; border-radius:15px; padding:10px; z-index:100; }
-.emoji { font-size:22px; padding:5px; cursor:pointer; transition: transform 0.1s ease; }
-.emoji:hover { transform:scale(1.2); }
-@keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  :root{
+    --bg: linear-gradient(135deg,#3a1c71,#d76d77,#ffaf7b);
+    --chat-width: 920px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial;background:var(--bg);}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;}
+  .card{
+    width:100%;max-width:var(--chat-width);
+    height:86vh;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;
+    background:rgba(255,255,255,0.06);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,0.35);
+    border:1px solid rgba(255,255,255,0.04);
+  }
+
+  /* header */
+  .header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,0.03)}
+  .title{font-weight:700;color:#fff;display:flex;gap:10px;align-items:center}
+  .controls{display:flex;gap:8px;align-items:center}
+  .btn {background:rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:10px;border:none;cursor:pointer}
+  .small{font-size:13px;padding:7px 10px;border-radius:8px}
+
+  /* join area */
+  #joinArea{display:flex;gap:10px;padding:14px;align-items:center}
+  #joinArea input{padding:10px;border-radius:10px;border:none;outline:none;background:rgba(255,255,255,0.03);color:#fff}
+  #joinArea button{background:#ff7aa2;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer}
+
+  /* chat area */
+  .chatArea{display:flex;flex-direction:column;flex:1;min-height:0}
+  #messages{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:12px}
+  .bubble{max-width:72%;padding:12px 14px;border-radius:14px;color:#fff;word-wrap:break-word;box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+  .meta{font-size:12px;opacity:0.75;margin-bottom:6px}
+  .mine{align-self:flex-end;background:linear-gradient(120deg,#4facfe,#00f2fe);border-bottom-right-radius:4px;text-align:right}
+  .their{align-self:flex-start;background:linear-gradient(120deg,#ff9a9e,#fecfef);color:#111;border-bottom-left-radius:4px;text-align:left}
+  .time{display:block;font-size:11px;opacity:0.75;margin-top:6px}
+  .receipt{font-size:12px;opacity:0.8;margin-left:8px}
+
+  /* typing status */
+  #typingStatus{padding:8px 18px;font-size:13px;color:rgba(255,255,255,0.85);min-height:20px}
+
+  /* input bar */
+  .inputBar{display:flex;gap:10px;padding:14px;background:rgba(0,0,0,0.12);align-items:center}
+  #msgBox{flex:1;padding:12px 14px;border-radius:12px;border:none;outline:none;background:rgba(255,255,255,0.04);color:#fff;font-size:15px}
+  .iconBtn{background:rgba(255,255,255,0.06);border-radius:12px;padding:10px;border:none;color:#fff;cursor:pointer}
+  #sendBtn{background:#ff6a95;color:#fff;padding:10px 14px;border-radius:12px;border:none;cursor:pointer}
+
+  /* emoji picker */
+  #emojiPicker{position:absolute;bottom:86px;left:22px;width:320px;max-height:220px;background:rgba(255,255,255,0.06);backdrop-filter:blur(8px);padding:10px;border-radius:12px;display:none;overflow:auto;flex-wrap:wrap;gap:6px;z-index:40}
+  .emoji{font-size:20px;padding:6px;cursor:pointer}
+
+  /* settings panel */
+  #settingsPanel{position:absolute;top:62px;right:22px;background:rgba(0,0,0,0.5);padding:12px;border-radius:10px;display:none;color:#fff;z-index:40;min-width:180px}
+  .bgOption{padding:8px;margin:6px 0;border-radius:8px;cursor:pointer;text-align:center;background:rgba(255,255,255,0.03)}
+
+  /* small helper */
+  .muted{opacity:0.8;font-size:13px;color:rgba(255,255,255,0.9)}
+  .hidden{display:none}
 </style>
 </head>
-
 <body>
-<div id="chatContainer">
-    <div id="header">QUARKS</div>
+<div class="wrap">
+  <div class="card" id="card">
 
-    <!-- JOIN SCREEN -->
-    <div id="joinContainer">
-        <input id="room" placeholder="Room name (example: rose123)">
-        <input id="nick" placeholder="Your nickname">
-        <button onclick="connectChat()">Join Room</button>
+    <div class="header">
+      <div class="title">Quarks</div>
+      <div class="controls">
+        <div id="roomLabel" class="muted">room: —</div>
+        <button id="settingsBtn" class="btn small">⚙️ Settings</button>
+      </div>
     </div>
 
-    <!-- MESSAGES -->
-    <div id="messages" style="display:none;"></div>
-
-    <!-- INPUT BAR -->
-    <div id="inputBar" style="display:none;">
-        <input id="msgBox" placeholder="Write a message..." onkeydown="checkEnter(event)">
-        <button id="emojiBtn" onclick="toggleEmojiPicker()">😊</button>
-        <button onclick="sendMsg()">Send</button>
-        <div id="emojiPicker"></div>
+    <!-- JOIN -->
+    <div id="joinArea">
+      <input id="roomInput" placeholder="Room name (rose123)" />
+      <input id="nickInput" placeholder="Your name (Quarks)" />
+      <button id="joinBtn">Join</button>
+      <div style="flex:1"></div>
+      <div class="muted">Tip: share same room name & enter same room to chat</div>
     </div>
+
+    <!-- settings panel -->
+    <div id="settingsPanel">
+      <div style="font-weight:700;margin-bottom:6px">Backgrounds</div>
+      <div class="bgOption" data-id="1">Blue → Purple</div>
+      <div class="bgOption" data-id="2">Pink → Orange</div>
+      <div class="bgOption" data-id="3">Teal → Blue</div>
+      <div class="bgOption" data-id="4">Night Black</div>
+      <hr style="border:none;height:8px">
+      <div style="font-size:13px;opacity:0.9">Chat width</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn small" data-width="720">Narrow</button>
+        <button class="btn small" data-width="920">Wider</button>
+        <button class="btn small" data-width="1100">Extra</button>
+      </div>
+      <hr style="border:none;height:8px">
+      <button id="clearStorage" class="btn small" style="margin-top:8px">Clear Local History</button>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chatArea" id="chatArea" style="position:relative">
+      <div id="emojiPicker"></div>
+      <div id="messages" aria-live="polite"></div>
+      <div id="typingStatus"></div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="inputBar">
+      <button id="emojiBtn" class="iconBtn">😊</button>
+      <input id="msgBox" placeholder="Write a message — Enter sends (Shift+Enter newline)" />
+      <button id="sendBtn">Send</button>
+    </div>
+
+  </div>
 </div>
 
 <script>
-let ws;
-let myNick = "";
+/* ============================
+   Config & state
+   ============================ */
+const WS_URL = "wss://hack.chat/chat-ws";
+let ws = null;
+let room = "";
+let nick = "";
+let typingTimeout = null;
+let emojiOpen = false;
+let messages = []; // local cache array of {id,nick,text,time,status}
+const STORAGE_PREFIX = "hc_chat_"; // key = hc_chat_<room>
 
-// Emoji list
-const emojis=[ "😀","😁","😂","🤣","😃","😄","😅","😆","😉","😊","😋","😎","😍","😘","🥰","😗","😙","😚","🙂","🤗","🤩","🤔","😐","😑","😶","🙄","😏","😣","😥","😮","🤐","😯","😪","😫","🥱","😴","😌","😛","😜","😝","🤤","😒","😓","😔","😕","🙃","🫠","😲","☹️","🙁","😖","😞","😟","😤","😢","😭","😦","😧","😨","😩","🥺","😬","😰","😱","🥵","🥶","😳","🤯","😡","😠","🤬","😈","👿","💀" ];
+/* ============================
+   DOM refs
+   ============================ */
+const roomInput = document.getElementById("roomInput");
+const nickInput = document.getElementById("nickInput");
+const joinBtn = document.getElementById("joinBtn");
+const roomLabel = document.getElementById("roomLabel");
+const messagesEl = document.getElementById("messages");
+const msgBox = document.getElementById("msgBox");
+const sendBtn = document.getElementById("sendBtn");
+const typingStatus = document.getElementById("typingStatus");
+const emojiBtn = document.getElementById("emojiBtn");
+const emojiPicker = document.getElementById("emojiPicker");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const bgOptions = settingsPanel.querySelectorAll(".bgOption");
+const widthBtns = settingsPanel.querySelectorAll("button[data-width]");
+const clearStorageBtn = document.getElementById("clearStorage");
+const card = document.getElementById("card");
 
-function populateEmojis(){
-    const picker = document.getElementById("emojiPicker");
-    picker.innerHTML = "";
-    emojis.forEach(e=>{
-        const span = document.createElement("span");
-        span.textContent = e;
-        span.className = "emoji";
-        span.onclick = ()=>{ document.getElementById("msgBox").value += e; };
-        picker.appendChild(span);
-    });
+/* ============================
+   Utility helpers
+   ============================ */
+function genId() {
+  return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
 }
-populateEmojis();
-
-function toggleEmojiPicker(){
-    const p = document.getElementById("emojiPicker");
-    p.style.display = p.style.display==="flex" ? "none" : "flex";
+function nowTime() {
+  const d = new Date();
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2,'0');
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+function saveLocal() {
+  if (!room) return;
+  localStorage.setItem(STORAGE_PREFIX + room, JSON.stringify(messages));
+}
+function loadLocal() {
+  if (!room) return;
+  const raw = localStorage.getItem(STORAGE_PREFIX + room);
+  messages = raw ? JSON.parse(raw) : [];
+  renderAll();
 }
 
-// close emoji menu when clicking outside
-document.addEventListener("click", (e)=>{
-    const picker = document.getElementById("emojiPicker");
-    const btn = document.getElementById("emojiBtn");
-    if(!picker.contains(e.target) && !btn.contains(e.target)){
-        picker.style.display = "none";
+/* ============================
+   Render
+   ============================ */
+function renderAll(){
+  messagesEl.innerHTML = "";
+  messages.forEach(m => renderMessageEl(m));
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function renderMessageEl(m){
+  // create bubble
+  const wrap = document.createElement("div");
+  wrap.className = "bubble " + (m.nick === nick ? "mine" : "their");
+  // meta (name)
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = m.nick;
+  wrap.appendChild(meta);
+  // text
+  const text = document.createElement("div");
+  text.innerText = m.text;
+  wrap.appendChild(text);
+  // time + receipt
+  const footer = document.createElement("div");
+  footer.style.display = "flex";
+  footer.style.justifyContent = m.nick===nick ? "flex-end" : "flex-start";
+  footer.style.alignItems = "center";
+  footer.style.gap = "8px";
+
+  const time = document.createElement("span");
+  time.className = "time";
+  time.textContent = m.time || "";
+  footer.appendChild(time);
+
+  if (m.nick === nick) {
+    const r = document.createElement("span");
+    r.className = "receipt";
+    r.textContent = m.status === "seen" ? "✓✓ Seen" : m.status === "delivered" ? "✓ Delivered" : "";
+    footer.appendChild(r);
+  }
+
+  wrap.appendChild(footer);
+  messagesEl.appendChild(wrap);
+}
+
+/* ============================
+   Message helpers
+   ============================ */
+function addLocalMessage(nickVal, textVal, statusVal){
+  const msg = { id: genId(), nick: nickVal, text: textVal, time: nowTime(), status: statusVal || "" };
+  messages.push(msg);
+  saveLocal();
+  renderMessageEl(msg);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return msg;
+}
+function updateMessageStatusByText(nickVal, textVal, newStatus){
+  // find latest matching message sent by nickVal with this text
+  for (let i = messages.length - 1; i >= 0; --i){
+    const m = messages[i];
+    if (m.nick === nickVal && m.text === textVal){
+      m.status = newStatus;
+      saveLocal();
+      renderAll();
+      return true;
     }
+  }
+  return false;
+}
+function markAllAsSeenByOther(){
+  // when other sends or types, mark our pending delivered as seen
+  let changed = false;
+  messages.forEach(m => {
+    if (m.nick === nick && (m.status === "delivered" || m.status === "")) {
+      m.status = "seen";
+      changed = true;
+    }
+  });
+  if (changed) { saveLocal(); renderAll(); }
+}
+
+/* ============================
+   WebSocket / hack.chat
+   ============================ */
+function connectWS(){
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ cmd: "join", channel: room, nick }));
+    // after join, you'll receive messages live. local history already loaded.
+  };
+
+  ws.onmessage = (ev) => {
+    try {
+      const data = JSON.parse(ev.data);
+
+      // hack.chat 'chat' messages
+      if (data.cmd === "chat") {
+        // Display incoming messages from others
+        if (data.nick !== nick) {
+          // add to local store and render
+          messages.push({ id: genId(), nick: data.nick, text: data.text, time: nowTime(), status: "" });
+          saveLocal();
+          renderAll();
+
+          // mark our messages as seen (heuristic)
+          markAllAsSeenByOther();
+        } else {
+          // this is echoed back from server for our own sent message -> mark delivered
+          updateMessageStatusByText(data.nick, data.text, "delivered");
+        }
+      }
+
+      // typing indicator events
+      if (data.cmd === "typing" && data.nick !== nick) {
+        typingStatus.textContent = `${data.nick} is typing…`;
+      }
+      if (data.cmd === "stoptyping" && data.nick !== nick) {
+        typingStatus.textContent = "";
+      }
+
+    } catch (err) {
+      console.warn("ws parse err", err);
+    }
+  };
+
+  ws.onclose = () => {
+    typingStatus.textContent = "Disconnected from server.";
+    // keep local messages — reconnect if desired
+  };
+}
+
+/* ============================
+   Send message / typing
+   ============================ */
+function sendMessage(){
+  const text = msgBox.value.trim();
+  if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+  // add to local UI as pending (no double bubble)
+  addLocalMessage(nick, text, ""); // status will update on echo->delivered
+  ws.send(JSON.stringify({ cmd: "chat", text }));
+  msgBox.value = "";
+  // stop typing immediately
+  ws.send(JSON.stringify({ cmd: "stoptyping", room, nick }));
+}
+
+function sendTyping(){
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ cmd: "typing", room, nick }));
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(()=> {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ cmd: "stoptyping", room, nick }));
+  }, 900);
+}
+
+/* ============================
+   UI events
+   ============================ */
+joinBtn.addEventListener("click", () => {
+  const r = roomInput.value.trim();
+  const n = nickInput.value.trim();
+  if (!r || !n) return alert("Enter room and your name");
+  room = r; nick = n;
+  roomLabel.textContent = "room: " + room;
+  // load saved messages for this room
+  loadLocal();
+  // connect
+  connectWS();
+  // switch UI: hide join area
+  document.getElementById("joinArea").style.display = "none";
 });
 
-function connectChat(){
-    const room = document.getElementById("room").value;
-    myNick = document.getElementById("nick").value;
+sendBtn.addEventListener("click", sendMessage);
 
-    if(!room || !myNick)
-        return alert("Enter both room and nickname!");
+msgBox.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  } else {
+    sendTyping();
+  }
+});
 
-    ws = new WebSocket("wss://hack.chat/chat-ws");
+/* emoji picker */
+const EMOJI_LIST = ["😀","😁","😂","🤣","😃","😄","😅","😆","😉","😊","😋","😎","😍","😘","🥰","🙂","🤗","🤩","🤔","😐","😶","🙄","😏","😣","😥","😮","😯","😪","😫","😴","😌","😛","😜","😝","😒","😓","😔","😕","🙃","🥲","😲","😶‍🌫️","😳","🥺","😢","😭","😤","😡","😠","🤬","😈","👻","💀","🤖","👽","👍","👎","🙏","👏","💖","❤️","🔥","🌟","✨","🎉","🎶","🌹","🌙"];
 
-    ws.onopen = ()=>{
-        ws.send(JSON.stringify({cmd:"join",channel:room,nick:myNick}));
-        document.getElementById("joinContainer").style.display="none";
-        document.getElementById("messages").style.display="flex";
-        document.getElementById("inputBar").style.display="flex";
-        addMessage("Connected to room: "+room, "system");
-    };
-
-    ws.onmessage = (event)=>{
-        const data = JSON.parse(event.data);
-        if(data.cmd==="chat") displayMessage(data.nick, data.text);
-    };
+function populateEmoji(){
+  emojiPicker.innerHTML = "";
+  EMOJI_LIST.forEach(e => {
+    const s = document.createElement("span");
+    s.className = "emoji";
+    s.textContent = e;
+    s.onclick = () => { msgBox.value += e; msgBox.focus(); };
+    emojiPicker.appendChild(s);
+  });
 }
+populateEmoji();
 
-function sendMsg(){
-    const msgBox = document.getElementById("msgBox");
-    let msg = msgBox.value.trim();
-    if(msg==="") return;
+emojiBtn.addEventListener("click", (ev) => {
+  ev.stopPropagation();
+  emojiOpen = !emojiOpen;
+  emojiPicker.style.display = emojiOpen ? "block" : "none";
+});
 
-    ws.send(JSON.stringify({cmd:"chat",text:msg}));
-    msgBox.value = "";
-}
-
-function displayMessage(nick,text){
-    const type = nick===myNick ? "own" : (nick==="system" ? "system" : "other");
-    const messages = document.getElementById("messages");
-    const div = document.createElement("div");
-
-    div.className = type==="own" ? "message own" : type==="other" ? "message other" : "message system";
-    div.textContent = `${nick}: ${text}`;
-
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-}
-
-// Enter to send
-function checkEnter(e){
-    if(e.key==="Enter" && !e.shiftKey){
-        e.preventDefault();
-        sendMsg();
+// close emoji when clicking outside
+document.addEventListener("click", (ev) => {
+  if (emojiOpen) {
+    if (!emojiPicker.contains(ev.target) && ev.target !== emojiBtn) {
+      emojiOpen = false; emojiPicker.style.display = "none";
     }
-}
-</script>
+  }
+  // settings panel outside click handling below
+  if (settingsPanel.style.display === "block" && !settingsPanel.contains(ev.target) && ev.target !== settingsBtn) {
+    settingsPanel.style.display = "none";
+  }
+});
 
+/* settings UI */
+settingsBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  settingsPanel.style.display = settingsPanel.style.display === "block" ? "none" : "block";
+});
+
+bgOptions.forEach(o => {
+  o.addEventListener("click", () => {
+    const id = o.dataset.id;
+    switch(id){
+      case "1": document.documentElement.style.setProperty('--bg','linear-gradient(135deg,#3a1c71,#d76d77,#ffaf7b)'); break;
+      case "2": document.documentElement.style.setProperty('--bg','linear-gradient(135deg,#ff6a88,#ff99ac)'); break;
+      case "3": document.documentElement.style.setProperty('--bg','linear-gradient(135deg,#11998e,#38ef7d)'); break;
+      case "4": document.documentElement.style.setProperty('--bg','linear-gradient(135deg,#0f0f0f,#1e1e1e)'); break;
+    }
+    settingsPanel.style.display = "none";
+  });
+});
+widthBtns.forEach(b => {
+  b.addEventListener("click", () => {
+    const w = b.dataset.width;
+    document.documentElement.style.setProperty('--chat-width', w+'px');
+  });
+});
+clearStorageBtn.addEventListener("click", () => {
+  if (!room) return alert("Join a room first");
+  if (confirm("Clear local history for this room?")) {
+    localStorage.removeItem(STORAGE_PREFIX + room);
+    messages = [];
+    renderAll();
+  }
+});
+
+/* clicking a message could focus input (nice UX) */
+messagesEl.addEventListener("click", () => msgBox.focus());
+
+/* ============================
+   Local history load on page open if room prefilled
+   ============================ */
+window.addEventListener("load", () => {
+  // if user left room & nick in url hash (optional quick join)
+  const h = location.hash.slice(1);
+  if (h) {
+    const [r,n] = h.split("|");
+    if (r) roomInput.value = r;
+    if (n) nickInput.value = n;
+  }
+});
+
+/* ============================
+   Extra: when other types, mark our messages as seen quickly
+   (we already do that in onmessage when receiving chat)
+   ============================ */
+
+/* ============================
+   Final note: localStorage keeps your seen messages.
+   ============================ */
+</script>
 </body>
 </html>
